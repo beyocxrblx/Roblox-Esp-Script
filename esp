@@ -1,0 +1,60 @@
+-- Roblox Exploit ESP Script (Executor uyumlu)
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local CoreGui = game:GetService("CoreGui") -- Hileyi oyunun kendi dosyalarından gizlemek için
+
+-- ESP'lerin toplanacağı gizli bir klasör oluşturuyoruz
+local ESPFolder = CoreGui:FindFirstChild("MyCustomESP") or Instance.new("Folder", CoreGui)
+ESPFolder.Name = "MyCustomESP"
+
+local function CreateESP(player)
+    if player == LocalPlayer then return end
+
+    local function Core(character)
+        if not character:fromRGB() then repeat task.wait() until character:IsDescendantOf(workspace) end
+        task.wait(0.5) -- Karakterin tamamen yüklenmesini bekle (Crash vermemesi için)
+
+        -- Eğer zaten ESP yapılmışsa eskiyi sil temizle
+        if ESPFolder:FindFirstChild(player.Name) then
+            ESPFolder[player.Name]:Destroy()
+        end
+
+        -- Karakterin ana gövdesini (HumanoidRootPart) buluyoruz
+        local root = character:FindFirstChild("HumanoidRootPart")
+        if root then
+            -- Highlight nesnesini doğrudan CoreGui içinde oluşturup oyuncuya bağlıyoruz
+            -- Böylece oyunun kendi hile koruması (anticheat) bunu kolay kolay fark edemez
+            local highlight = Instance.new("Highlight")
+            highlight.Name = player.Name
+            highlight.Adornee = character
+            highlight.FillColor = Color3.fromRGB(255, 0, 0) -- Kırmızı iç dolgu
+            highlight.FillTransparency = 0.6
+            highlight.OutlineColor = Color3.fromRGB(255, 255, 255) -- Beyaz dış çizgi
+            highlight.OutlineTransparency = 0
+            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop -- Duvar arkası görme aktif
+            highlight.Parent = ESPFolder
+        end
+    end
+
+    if player.Character then
+        task.spawn(Core, player.Character)
+    end
+    player.CharacterAdded:Connect(function(char)
+        task.spawn(Core, char)
+    end)
+end
+
+-- Mevcut oyuncuları tara
+for _, v in ipairs(Players:GetPlayers()) do
+    CreateESP(v)
+end
+
+-- Yeni girenleri tara
+Players.PlayerAdded:Connect(CreateESP)
+
+-- Oyundan çıkanların ESP'sini temizle
+Players.PlayerRemoving:Connect(function(player)
+    if ESPFolder:FindFirstChild(player.Name) then
+        ESPFolder[player.Name]:Destroy()
+    end
+end)
