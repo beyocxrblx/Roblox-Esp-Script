@@ -11,7 +11,7 @@ local function CreateESP(player)
     if player == LocalPlayer then return end
 
     local function Core(character)
-        if not character:fromRGB() then repeat task.wait() until character:IsDescendantOf(workspace) end
+        if not character.PrimaryPart then repeat task.wait() until character:IsDescendantOf(workspace) end
         task.wait(0.5) -- Karakterin tamamen yüklenmesini bekle (Crash vermemesi için)
 
         -- Eğer zaten ESP yapılmışsa eskiyi sil temizle
